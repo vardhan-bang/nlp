@@ -1,12 +1,37 @@
-import pandas as pd
+import spacy
+from sklearn.metrics import classification_report
 
-data = {
-    "Base Word":["play","happy","run","write","book","un","care","boy"],
-    "Added Morpheme":["-ed","-ness","-ing","-er","-s","-happy","-less","-ish"],
-    "New Word":["played","happiness","running","writer","books","unhappy","careless","boyish"],
-}
+def predict_entities(text):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(text)
+    return [(ent.text, ent.label_) for ent in doc.ents]
+    
+def evaluate_ner(texts_and_labels):
+    true_labels = []
+    pred_labels = []
 
-df = pd.DataFrame(data)
-df['Deleted Morpheme'] = df['Added Morpheme']
-df['New word after deletion'] = df['Base Word']
-df
+    for text, true_ents in texts_and_labels:
+        preds = predict_entities(text)
+        true_labels.extend([label for _, label in true_ents])
+        pred_labels.extend([label for _, label in preds])
+
+    return classification_report(true_labels, pred_labels)
+
+text = "Apple CEO Tim Cook announced new iPhone models in California yesterday"
+print("\nExample Text Entities:\n")
+for text, label in predictions:
+    print(f"{text}: {label}")
+
+test_data = [
+    (
+        "Microsoft's Satya Nadella visited London.",
+        [("Micorosft", "ORG"), ("Satya Nadella", "PERSON"), ("London", "GPE")]
+    ),
+    (
+        "Google opened a new office in Paris.",
+        [("Micorosft", "ORG"), ("Paris", "GPE")]
+    )
+]
+
+print("\nEvaluation")
+print(evaluate_ner(test_data))
